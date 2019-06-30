@@ -2,11 +2,12 @@
 program barrier
 
 implicit none
+integer, parameter :: dp = selected_real_kind(15, 307)
 real :: slope, beach
-real, allocatable, dimension(:) :: bathy
-integer, dimension(5:5) :: test
-integer :: i, j, mx, my , n, t1, t2, bathy_size
-real :: xll, yll, cellsize, nodata_value, amp_max, dx, sigma, h0, x1, x2
+real, allocatable, dimension(:) :: bathy, row
+!integer, dimension(5:5) :: test
+integer :: i, j, mx, my , n, t1, t2, bathy_size, rowidx, colidx, idx, jdx, ip, jp
+real :: xll, yll, cellsize, nodata_value, amp_max, dx, sigma, h0, x1, x2, col, stepx, stepy
 real :: time(10) != (/(i, i=0,9, 1)/)
 real, dimension(10) :: amp
 real, dimension(1:10) :: time_test
@@ -14,10 +15,19 @@ integer, dimension(10) :: zero_array
 integer, dimension(10) :: one_array
 real(kind=8) :: values(10)
 character(len=80) :: str
-real :: x(11) = (/(i, i=-5,5, 1)/)
-real, dimension(501) :: y = (/(i, i=-250, 250, 1)/)
-real,allocatable, dimension(:,:) :: X_mesh, Y_mesh, breach
 
+real, dimension(600) :: y 
+real,allocatable, dimension(:,:) :: X_mesh, Y_mesh, breach, test
+real, dimension(500) :: x 
+stepx = (100.0 + 100.0)/ real(499.0, dp)
+stepy = (60e3 / real(599, dp))
+x = (/((i-1)*stepx -100.0, i=1,500)/)
+y = (/((i-1)* stepy + 0, i=1, 600)/)
+ !x = [(i*dx+a, i = 0, n-1)]
+ do idx=1, size(x)
+	print *, idx, x(idx)
+	end do
+print *,'the index of x and y are 0?', x(1), y(599)
 open(10, file='test.tt3')
 	read(10,*) mx
 	read(10,*) my
@@ -62,15 +72,29 @@ print *, 'This has run'
 ! end do
 ! print *, bathy(1:my*mx)
 sigma = 10.0
-
-X_mesh(:,:) = spread(x, 1, size(y))
-Y_mesh(:,:) = spread(y, 2, size(x))
+test(:,:) = spread(x, 1, size(y))
+! do idx = 1, size(x)
+! print*, test(1,idx)
+! end do
+print *,'rank of x & y',  rank(x), rank(y)
+allocate(X_mesh(size(y), size(x)))
+allocate(Y_mesh(size(y), size(x)))
+do i=1, size(y)
+	do j=1, size(x)
+		X_mesh(i,j) = x(j)
+		Y_mesh(i,j) = y(i)
+	end do
+end do
+print *, Y_mesh(75, 221)
 x1 = -25.0
 x2 = 25.0
+! do idx=0,size(X_mesh,2)
+	! print *, idx, X_mesh(1,idx)
+	! end do
 !print *, size(X_mesh,1), size(X_mesh, 2)
 ! do i=1, size(X_mesh, 1)
 ! print *, size(X_mesh(i,:))
-print *, size(X_mesh(i,:)), size(X_mesh, 1)
+print *, size( X_mesh, 1)
 allocate(breach(size(X_mesh, 1), size(X_mesh, 2)))
 do i= 1, size(X_mesh,2)
 	breach(:,i) = 10
@@ -78,13 +102,46 @@ do i= 1, size(X_mesh,2)
 		breach(j,:) = 10
 end do
 end do
-
+print*, 'X', shape(X_mesh), 'Y', shape(Y_mesh), 'B', shape(breach), 'the size of X(mesh, 2) is', size(X_mesh, 2)
+print *, 'X_mesh, 1', X_mesh(1,499)
 do i = 1, size(amp)
-	where (any(x1 <= X_mesh(:,:) .and. X_mesh(:,:) <= x2))
+	print *, 'amp loop', i
+	do rowidx = 1, size(X_mesh, 1)
+	!print *, 'row', rowidx
+		row = X_mesh(rowidx,:)
+			do colidx = 1, size(X_mesh, 2)
+	!			print *, 'col', colidx
+				col = X_mesh(rowidx, colidx)
+				
+				if (col >= x1 .and. col <= x2) then
+					!print *, 'breaching'
+					!print*, Y_mesh(rowidx, colidx)
+					breach(rowidx, colidx) = breach(rowidx, colidx) - (amp(i) * exp(-X_mesh(rowidx, colidx)**2/(sigma**2)) &
+					* 0.1 * Y_mesh(rowidx, colidx))
+					
+				end if
+				
+			end do
+	end do
+
+print '("Matrix Breach"/(10F8.2))', ((breach(ip,jp), ip = 112, 129), jp = 187, 192) 
+open(99, file='fortran_test.txt', status='replace', action='write')
+
+
+ ! READ (10, *)  ((B(i, j), i = 1, 4), j = 1, 4)  
+write(99, "(10F16.8)") ((breach(jp,ip), ip = 1, size(breach, 2)), jp = 1, size(breach, 1))
+! do idx=1, size(X_mesh, 2)
+	! do jdx = 1, size(X_mesh, 1)
+		! write(99,*) breach(idx,jdx)
+	! end do
+! end do
+close(99)
+
+	!where (any(x1 <= X_mesh(:,:) .and. X_mesh(:,:) <= x2))
 	!print *, amp(i)
-		breach = breach - amp(i) * exp(-X_mesh**2 / sigma**2) * 0.10 * Y_mesh
-	end where
+		!breach = breach - amp(i) * exp(-X_mesh**2 / sigma**2) * 0.10 * Y_mesh
+	!end where
 end do
 
-print *, breach
+!print *, breach
 end program barrier
