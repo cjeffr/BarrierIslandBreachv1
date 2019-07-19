@@ -1,5 +1,4 @@
-! try to  make something work with barrier breach
-program barrier
+program barrier_breach
 implicit none
 
 ! Allocate variables
@@ -14,7 +13,7 @@ integer, dimension(10) :: one_array
 real, dimension(600) :: y 
 real,allocatable, dimension(:,:) :: X_mesh, Y_mesh, breach
 real, dimension(500) :: x 
-
+CHARACTER(*), PARAMETER :: fileplace = "/home/claw/clawpack-v5.5.0/geoclaw/scratch/"
 ! Determine number of increments for X_mesh and Y_mesh
 stepx = (100.0 + 100.0)/ 499.0
 stepy = (60e3 / 599)
@@ -22,9 +21,10 @@ stepy = (60e3 / 599)
 ! fill x and y like np.linspace
 x = (/((i-1)*stepx -100.0, i=1,500)/)
 y = (/((i-1)* stepy + 0, i=1, 600)/)
-
+print *, fileplace//'test.tt3'
 ! Open bathy file and read header to get size
-open(10, file='test.tt3')
+! OPEN(unit=10, status="old",file=fileplace//"file1.dat")
+open(10, file=fileplace//'test.tt3', status='old')
 	read(10,*) mx
 	read(10,*) my
 	read(10,*) xll
@@ -102,10 +102,6 @@ do i = 1, size(amp)
 			end do
 	end do
 end do
-! Write out binary file to test in python 
-! open(99, file='fortran_test.dat',  action='write', form='unformatted', access='stream')
-! do i =1, size(y)
-	! write(99) (breach(i,j), j=1,size(x))
-! end do
-! close(99)
-end program barrier
+
+
+end program barrier_breach
