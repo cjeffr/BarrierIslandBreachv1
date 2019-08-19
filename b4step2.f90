@@ -23,9 +23,8 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     use amr_module, only: xhidomain => xupper
     use amr_module, only: yhidomain => yupper
     use amr_module, only: xperdom,yperdom,spheredom,NEEDS_TO_BE_SET
-	
+
     use storm_module, only: set_storm_fields
-	!use barrier_breach
     implicit none
 
     ! Subroutine arguments
@@ -34,12 +33,12 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     real(kind=8), intent(inout) :: xlower, ylower, dx, dy, t, dt
     real(kind=8), intent(inout) :: q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
     real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
-	
+
 
     ! Local storage
     integer :: index,i,j,k,dummy
     real(kind=8) :: h,u,v
-	
+
     ! Check for NaNs in the solution
     call check4nans(meqn,mbc,mx,my,q,t,1)
 
@@ -50,7 +49,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
         q(1,i,j) = max(q(1,i,j),0.d0)
         q(2:3,i,j) = 0.d0
     end forall
-	
+
 
     if (aux_finalized < 2) then
         print *, 'RESETTING AUX'
@@ -60,15 +59,16 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
         call setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     endif
 
-    ! !!!!!Change xlower and ylower compare values to varialbes read from file 
+    ! !!!!!Change xlower and ylower compare values to varialbes read from file
+
    if ((xlower > -88.0) .and. (xlower < -86.0) .and. &
-        (ylower < 25.7) .and. (ylower > 25.5)) then
-       
+        (ylower < 26.0) .and. (ylower > 25.0)) then
+
            print *, 'Gonna call barrier breach!'
            call barrier_breach(maux,mbc,mx,my,xlower,ylower,dx,dy,t,dt,aux)
-       
+
    end if
-   
+
     ! Set wind and pressure aux variables for this grid
     call set_storm_fields(maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)
 
@@ -84,63 +84,16 @@ real(kind=8), intent(inout) :: xlower, ylower, dx, dy, t, dt
 real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
 
 ! Local variables
-! integer, parameter :: dp = selected_real_kind(15, 307)
-real, allocatable, dimension(:) ::  row
-integer :: i, j,  t1, t2, rowidx, colidx
-real ::  amp_max, sigma, h0, x1, x2, col, stepx, stepy, dtime, amp
-real :: time(10) != (/(i, i=0,9, 1)/)
-!real, dimension(10) :: amp
-integer, dimension(10) :: zero_array
-integer, dimension(10) :: one_array
-real, dimension(600) :: y 
-real,allocatable, dimension(:,:) :: X_mesh, Y_mesh, breach
-real, dimension(500) :: x 
-CHARACTER(*), PARAMETER :: fileplace = "/home/cat/claw/clawpack-v5.5.0/geoclaw/scratch/"
+real(kind=8), allocatable, dimension(:) :: x, y, b
+real(kind=8) :: db,depth
+real,allocatable, dimension(:,:) :: X_mesh, Y_mesh, B_mesh, breach, bathy
 
-! do j=1-mbc,my+mbc
-    !     y = ylower + (j-0.5d0) * dy
-    !     do i=1-mbc,mx+mbc
-    !         x = xlower + (i-0.5d0) * dx
-    !         ! Location logic
-    !         aux(1, i, j) = something
-    !     end do
-    ! end do
+CHARACTER(*), PARAMETER :: fileplace = "/home/claw/clawpack-v5.5.0/geoclaw/scratch/"
 
-! Determine number of increments for X_mesh and Y_mesh
-! stepx = (100.0 + 100.0)/ 499.0
-! stepy = (60e3 / 599)
+depth = minval(aux(1,i,j))
+db = abs(depth / my-1)
 
-! fill x and y like np.linspace
-! x = (/((i-1)*stepx -100.0, i=1,500)/)
-! y = (/((i-1)* stepy + 0, i=1, 600)/)
-
-do j=1-mbc,my+mbc
-        y = ylower + (j-0.5d0) * dy
-        do i=1-mbc,mx+mbc
-            x = xlower + (i-0.5d0) * dx
-            print *, size(x), size(y)
-        end do
-    end do
-
-t1 = -200000.0
-t2 = 6.0
-amp_max = 5.0
-dtime = 10.0/9.0 !!!!! what is this doing!
-time(1:10) = [(0 + ((i-1)*dtime),i=1, 10)]
-
-zero_array = 0
-one_array = 1
-
-!do i = 1, 10
-!	if (time(i) < t1) then
-!		amp(i) = zero_array(i)
-!	elseif (t1 <= time(i) .and. time(i) < t2) then
-!		amp(i) =  (amp_max / (t2 - t1) * (time(i) - t1))
-!	elseif (t2 <= time(i)) then
-!		amp(i) = one_array(i) * amp_max
-!end if
-!
-!end do
+call test_aux1(x, y, b, X_mesh, Y_mesh, B_mesh, bathy, depth, dx, dy, db, mx, my)
 
 ! fill x and y matrices a la np.meshgrid
 allocate(X_mesh(size(y), size(x)))
@@ -153,8 +106,10 @@ do i=1, size(y)
 end do
 ! Add breach parameters
 !!!!!! change these to imported from b4step2 subroutine
-x1 = -86.0
-x2 = -88.0
+x2 = -86.0
+x1 = -88.0
+y1 = 25.5
+y2 = 25.7
 sigma = 10.0
 h0 = 10.0
 allocate(breach(size(X_mesh, 1), size(X_mesh, 2)))
@@ -165,7 +120,7 @@ allocate(breach(size(X_mesh, 1), size(X_mesh, 2)))
 !		breach(j,:) = h0
 !	end do
 !end do
-breach(:,:) = aux(1, :, :)
+breach(:,:) = 0 ! aux(1, :, :)
 ! Breach the barrier island depending on time
 if (t<t1) then
     amp =0.0
@@ -173,29 +128,34 @@ elseif (t>t1) then
     amp=10.0
 end if
 
-!do i = 1, size(amp)
+!!do i = 1, size(amp)
+!open(99, file=fileplace//'breach_output.txt',status='new')
 	do rowidx = 1, size(X_mesh, 1)
 		row = X_mesh(rowidx,:)
 			do colidx = 1, size(X_mesh, 2)
 				col = X_mesh(rowidx, colidx)
-				if (col >= x1 .and. col <= x2) then
+        ycol = Y_mesh(rowidx, colidx)
+        !print *, col, ycol
+				if ((col >= x1) .and. (col <= x2) .and. &
+           ( ycol >= y1) .and. (ycol <= y2)) then
+
 					breach(rowidx, colidx) = breach(rowidx, colidx) &
-					- (amp * exp(-X_mesh(rowidx, colidx)**2/(sigma**2)) &
-					* 0.1 * Y_mesh(rowidx, colidx))
+					- (500.0 * exp(-col**2/(sigma**2))) ! exp(-X_mesh(rowidx, colidx)**2/(sigma**2)))
+        !  print *, col,ycol, breach(rowidx, colidx)
+          ! print *, breach(rowidx, colidx), aux(1,rowidx, colidx)
 				end if
+!        write(99) (breach(rowidx, colidx))
 			end do
 	end do
+!close(99)
 !end do
 
-aux(1,:,:) = breach(:,:)
-print *, maxval(breach)
-! do j=1-mbc,my+mbc
-    !     y = ylower + (j-0.5d0) * dy
-    !     do i=1-mbc,mx+mbc
-    !         x = xlower + (i-0.5d0) * dx
-    !         ! Location logic
-    !         aux(1, i, j) = something
-    !     end do
-    ! end do
 
 end subroutine barrier_breach
+subroutine test_aux1(x, y, b, X_mesh, Y_mesh, B_mesh, bathy, depth, dx, dy, db, mx, my)
+    real(kind=8), allocatable, dimension(:), intent(inout) :: x, y, b
+    real(kind=8), allocatable, dimension(:,:), intent(inout) :: X_mesh, Y_mesh, B_mesh, bathy, depth
+    real(kind=8), intent(inout) :: dx, dy, db
+    
+
+end subroutine test_aux1
