@@ -7,18 +7,19 @@ integer :: mbc,maux ! , intent(inout)
 integer :: mx, my !, intent(inout)
 real(kind=8) ::  t, dt ! , intent(inout)
 real(kind=8) :: xlower, ylower, dx, dy, db, depth !, intent(inout) ::
-real(kind=8), allocatable, dimension(:) :: x, y, b! , intent(out)
+real(kind=8), allocatable, dimension(:) :: x, y, b, xx, yy, bb! , intent(out)
+
 !real(kind=8) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc) ! , intent(inout)
 
 ! Local variables
 
 
 
-real(kind=8),allocatable, dimension(:,:) :: X_mesh, Y_mesh, B_mesh, breach, bathy
+real(kind=8),allocatable, dimension(:,:) :: X_mesh, Y_mesh, B_mesh, XXM, YYM, BBM, breach, bathy
 
 CHARACTER(*), PARAMETER :: fileplace = "/home/claw/clawpack-v5.5.0/geoclaw/scratch/"
 
-
+mbc = 2
 my = 2880 ! number of columns of bathy
 mx = 3480 ! number of rows of bathy
 dx = 8.33622785689400e-03 ! increments of x
@@ -27,60 +28,80 @@ xlower = -99
 ylower = 8
 depth = -5000.0
 db = abs(depth / (my - 1))
+allocate(x(1-mbc:mx+mbc))
+call create_bathy(xlower, ylower, mx, my, x, y, dx, dy, b, db, depth, mbc, xx, yy,bb)
 
-call create_bathy(xlower, ylower, mx, my, x, y, dx, dy, b, db, depth)
-
-call test_bathy(x,y,b)
-call create_grid(X_mesh, Y_mesh, B_mesh, x, y, b)
-call test_grid(X_mesh, Y_mesh, B_mesh)
-call create_island(B_mesh, Y_mesh, bathy)
-
-call test_island(bathy)
-call create_breach(X_mesh, Y_mesh, bathy, t)
-call test_breach(breach)
+!call test_bathy(x,y,b, xx, yy,bb)
+call create_grid(X_mesh, Y_mesh, B_mesh, x, y, b, XXM, YYM, BBM)
+call test_grid(X_mesh, Y_mesh, B_mesh, XXM, YYM, BBM)
+!call create_island(B_mesh, Y_mesh, bathy)
+!
+!call test_island(bathy)
+!call create_breach(X_mesh, Y_mesh, bathy, t)
+!call test_breach(breach)
 
 ! Initialize breach to match the original bathymetry
 !breach(:,:) = aux(1, :, :)
 
 contains
-    subroutine create_bathy(xlower, ylower, mx, my, x, y, dx, dy, b, db, depth)
+    subroutine create_bathy(xlower, ylower, mx, my, x, y, dx, dy, b, db, depth, mbc, xx, yy,bb)
     implicit none
   ! Subroutine variables
   ! Subroutine variables imported from b4step2.f90
-    integer, intent(inout) :: mx, my
+    integer, intent(inout) :: mx, my, mbc
     real(kind=8), intent(inout) :: xlower, ylower, dx, dy, db, depth
-    real(kind=8), allocatable, dimension(:), intent(inout) :: x, y, b
-    integer :: i
+    real(kind=8), allocatable, dimension(:), intent(inout) :: y, b, xx, yy, bb
+    real(kind=8), dimension(1-mbc:), intent(inout) :: x
+    integer :: i, j
+    real(kind=8) :: xll, yll, bll
     ! fill x and y like np.linspace
-    allocate(x(mx))
-    allocate(y(my))
-    allocate(b(my))
-    x = (/((i-1)*dx + xlower, i=1,mx)/)
-    y = (/((i-1)*dy + ylower, i=1,my)/)
-    b = (/((i-1)*db + depth, i=1,my)/)
+!    allocate(x(1-mbc:mx+mbc))
+    allocate(y(1-mbc:my+mbc))
+    allocate(b(1-mbc:my+mbc))
+    allocate(xx(1-mbc:mx+mbc))
+    allocate(yy(1-mbc:my+mbc))
+    allocate(bb(1-mbc:my+mbc))
+    x = (/((i-0.5d0)*dx + xlower, i=1-mbc,mx+mbc)/)
+    y = (/((i-0.5d0)*dy + ylower, i=1-mbc,my+mbc)/)
+    b = (/((i-0.5d0)*db + depth, i=1-mbc,my+mbc)/)
 !    print *, db, depth
 !     do i = 1, size(b)
 !       print *, b(i)
 !     end do
 
+    do j=1-mbc,my+mbc
+        yll = ylower + (j-0.5d0) * dy
+        do i=1-mbc,mx+mbc
+            xll = xlower + (i-0.5d0) * dx
+            bll = depth + (j-0.5d0)*db
+            ! Location logic
+!            aux(1, i, j) = something
+            xx(i) = xll
+            yy(j) = yll
+            bb(j) = bll
+        end do
+    end do
   end subroutine create_bathy
 
-    subroutine test_bathy(x, y, b)
+    subroutine test_bathy(x, y, b, xx, yy,bb)
         real(kind=8), intent(in), dimension(:) :: x, y, b
-        real, allocatable, dimension(:) :: xx, yy, bb
+        real(kind=8), intent(in), dimension(:) :: xx, yy, bb
+!        real, allocatable, dimension(:) ::  bb
 
-        open(1, File='x_array.txt', form='unformatted')
-        open(2, File='y_array.txt', form='unformatted')
-        open(3, File='b_array.txt', form='unformatted')
-        allocate(xx(3480))
-        allocate(yy(2880))
-        allocate(bb(2880))
-        read(1) xx
-        read(2) yy
-        read(3) bb
-        close(1)
-        close(2)
-        close(3)
+        integer :: i, j
+
+!        open(1, File='x_array.txt', form='unformatted')
+!        open(2, File='y_array.txt', form='unformatted')
+!        open(3, File='b_array.txt', form='unformatted')
+!        allocate(xx(3480))
+!        allocate(yy(2880))
+!        allocate(bb(2880))
+!        read(1) xx
+!        read(2) yy
+!        read(3) bb
+!        close(1)
+!        close(2)
+!        close(3)
         if (all(abs(x - xx) < .01)) then
             print *, 'x is equal'
         end if
@@ -90,17 +111,25 @@ contains
         if (all(abs(b - bb) < .01)) then
             print *, 'b is equal'
         end if
+        do i=1, size(bb)
+            print *, b(i), bb(i)
+        end do
 
 
   end subroutine test_bathy
-    subroutine create_grid(X_mesh, Y_mesh, B_mesh, x, y, b)
-        real(kind=8), allocatable, intent(inout), dimension(:,:) :: X_mesh, Y_mesh, B_mesh
+    subroutine create_grid(X_mesh, Y_mesh, B_mesh, x, y, b, XXM, YYM, BBM)
+        real(kind=8), allocatable, intent(inout), dimension(:,:) :: X_mesh, Y_mesh, B_mesh, XXM, YYM, BBM
         real(kind=8), dimension(:), intent(inout) :: x, y, b
-
+        real(kind=8) :: xll, yll, bll
+        integer :: i,j
         ! fill x and y matrices a la np.meshgrid
-        allocate(X_mesh(size(y), size(x)))
-        allocate(Y_mesh(size(y), size(x)))
-        allocate(B_mesh(size(b), size(x)))
+        allocate(X_mesh(size(x), size(y)))
+        allocate(Y_mesh(size(x), size(y)))
+        allocate(B_mesh(size(b), size(y)))
+        allocate(XXM(1-mbc:mx+mbc,1-mbc:my+mbc))
+        allocate(YYM(1-mbc:mx+mbc,1-mbc:my+mbc))
+        allocate(BBM(1-mbc:mx+mbc,1-mbc:my+mbc))
+!        print *, shape(X_mesh), shape(Y_mesh), shape(B_mesh)
 !        do i=1, size(y)
 !            do j=1, size(x)
 !                X_mesh(i,j) = x(j)
@@ -108,32 +137,52 @@ contains
 !                B_mesh(i,j) = b(i)
 !            end do
 !        end do
-        X_mesh = spread(x, 1, size(y))
-        Y_mesh = spread(y, 2, size(x))
-        B_mesh = spread(b, 2, size(x))
+        X_mesh = spread(x, 2, size(y))
+        Y_mesh = spread(y, 1, size(x))
+        B_mesh = spread(b, 1, size(x))
+!        print *, X_mesh
+        do j=1-mbc,my+mbc
+            yll = ylower + (j-0.5d0) * dy
+            do i=1-mbc,mx+mbc
+                xll = xlower + (i-0.5d0) * dx
+                bll = depth + (j-0.5d0)*db
+                ! Location logic
+                !            aux(1, i, j) = something
+                XXM(i,j) = xll
+                YYM(i,j) = yll
+                BBM(i,j) = bll
+            end do
+        end do
     end subroutine create_grid
-    subroutine test_grid(X_mesh, Y_mesh, B_mesh)
+    subroutine test_grid(X_mesh, Y_mesh, B_mesh, XXM, YYM, BBM)
         real(kind=8), intent(in), dimension(:,:) :: X_mesh, Y_mesh, B_mesh
-        real, dimension(2880,3480) :: xx_mesh, yy_mesh, bb_mesh
-
-        open(1, File='X_grid.txt', form='unformatted')
-        open(2, File='Y_grid.txt', form='unformatted')
-        open(3, File='B_grid.txt', form='unformatted')
-        read(1) xx_mesh
-        read(2) yy_mesh
-        read(3) bb_mesh
-        close(1)
-        close(2)
-        close(3)
-        if (all(abs(X_mesh - xx_mesh) < .01)) then
+        real(kind=8), intent(in), dimension(:,:) :: XXM, YYM, BBM
+        integer :: i,j
+!        open(1, File='X_grid.txt', form='unformatted')
+!        open(2, File='Y_grid.txt', form='unformatted')
+!        open(3, File='B_grid.txt', form='unformatted')
+!        read(1) xx_mesh
+!        read(2) yy_mesh
+!        read(3) bb_mesh
+!        close(1)
+!        close(2)
+!        close(3)
+        print *, shape(B_mesh), shape(Y_mesh), shape(X_mesh)
+!        print *, B_mesh
+        if (all(abs(X_mesh - XXM) < .01)) then
             print *, 'X is equal'
         end if
-        if (all(abs(Y_mesh - yy_mesh) < .01)) then
+        if (all(abs(Y_mesh - YYM) < .01)) then
             print *, 'Y is equal'
         end if
-        if (all(abs(B_mesh - bb_mesh) < .01)) then
+        if (all(abs(B_mesh - BBM) < .01)) then
             print *, 'B is equal'
         end if
+!        do j =1, size(XXM,2)
+!            do i = 1, size(XXM,1)
+!                print *, B_mesh(i,j), BBM(i,j)
+!            end do
+!        end do
         end subroutine test_grid
     subroutine create_island(B_mesh, Y_mesh, bathy)
         real(kind=8), intent(in), dimension(:,:) :: Y_mesh, B_mesh
@@ -173,7 +222,7 @@ contains
         open(1, File='Bathy.txt', form='unformatted')
         read(1) in_bathy
         close(1)
-
+!        print *, bathy
         if (all(abs(bathy - in_bathy) < .01)) then
             print *, 'Bathy is equal'
         end if
