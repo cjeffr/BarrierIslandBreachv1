@@ -68,10 +68,10 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = -92      # west longitude
-    clawdata.upper[0] = -82      # east longitude
+    clawdata.lower[0] = -99      # west longitude
+    clawdata.upper[0] = -70      # east longitude
 
-    clawdata.lower[1] = 20       # south latitude
+    clawdata.lower[1] = 8       # south latitude
     clawdata.upper[1] = 32      # north latitude
 
     # Number of grid cells:
@@ -262,12 +262,12 @@ def setrun(claw_pkg='geoclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 5
+    amrdata.amr_levels_max = 6
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 2, 2, 6, 16]
-    amrdata.refinement_ratios_y = [2, 2, 2, 6, 16]
-    amrdata.refinement_ratios_t = [2, 2, 2, 6, 16]
+    amrdata.refinement_ratios_x = [2, 2, 2, 6, 4]
+    amrdata.refinement_ratios_y = [2, 2, 2, 6, 4]
+    amrdata.refinement_ratios_t = [2, 2, 2, 6, 4]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -310,9 +310,15 @@ def setrun(claw_pkg='geoclaw'):
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
     # == setregions.data values ==
+    t_0 = rundata.clawdata.t0
+    t_f = rundata.clawdata.tfinal
     regions = rundata.regiondata.regions
+    regions.append([1,2, rundata.clawdata.t0, rundata.clawdata.tfinal, -99, -70, 8, 32])
+    regions.append([5,5, rundata.clawdata.t0, rundata.clawdata.tfinal, -89.0, -85.0, 25.45, 25.75])
+    regions.append([6,6, rundata.clawdata.t0, rundata.clawdata.tfinal, -88.0, -86.0, 25.45, 25.75])
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
+
     # Gauges from Ike AWR paper (2011 Dawson et al)
     # rundata.gaugedata.gauges.append([1, -95.04, 29.07,
                                      # rundata.clawdata.t0,
@@ -324,9 +330,78 @@ def setrun(claw_pkg='geoclaw'):
                                      # rundata.clawdata.t0,
                                      # rundata.clawdata.tfinal])
     # rundata.gaugedata.gauges.append([4, -94.13, 29.58,
-                                     # rundata.clawdata.t0,
-                                     # rundata.clawdata.tfinal])
+                                     # rundata.cl
 
+                                     # rundata.clawdata.tfinal])
+    rundata.gaugedata.gauges.append([1, -88.0, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([2, -87.9, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([3, -87.8, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([4, -87.6, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([5, -87.5, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([6, -87.4, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([7, -87.3, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([8, -87.2, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([9, -87.1, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([10, -87.0, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([11, -86.9, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([12, -86.8, 25.7, t_0, t_f])
+    rundata.gaugedata.gauges.append([13, -86.7, 25.7, t_0, t_f])
+
+    rundata.gaugedata.gauges.append([14, -88.0, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([15, -87.9, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([16, -87.8, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([17, -87.6, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([18, -87.5, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([19, -87.4, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([20, -87.3, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([21, -87.2, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([22, -87.1, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([23, -87.0, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([24, -86.9, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([25, -86.8, 25.6, t_0, t_f])
+    rundata.gaugedata.gauges.append([26, -86.7, 25.6, t_0, t_f])
+
+    rundata.gaugedata.gauges.append([27, -88.0, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([28, -87.9, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([29, -87.8, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([30, -87.6, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([31, -87.5, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([32, -87.4, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([33, -87.3, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([34, -87.2, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([35, -87.1, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([36, -87.0, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([37, -86.9, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([38, -86.8, 25.5, t_0, t_f])
+    rundata.gaugedata.gauges.append([39, -86.7, 25.5, t_0, t_f])
+
+    rundata.gaugedata.gauges.append([40, -88.0, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([41, -87.9, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([42, -87.8, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([43, -87.6, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([44, -87.5, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([45, -87.4, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([46, -87.3, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([47, -87.2, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([48, -87.1, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([49, -87.0, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([50, -86.9, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([51, -86.8, 25.4, t_0, t_f])
+    rundata.gaugedata.gauges.append([52, -86.7, 25.4, t_0, t_f])
+
+    rundata.gaugedata.gauges.append([53, -88.0, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([54, -87.9, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([55, -87.8, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([56, -87.6, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([57, -87.5, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([58, -87.4, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([59, -87.3, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([60, -87.2, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([61, -87.1, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([62, -87.0, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([63, -86.9, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([64, -86.8, 25.8, t_0, t_f])
+    rundata.gaugedata.gauges.append([65, -86.7, 25.8, t_0, t_f])
     # Force the gauges to also record the wind and pressure fields
     rundata.gaugedata.aux_out_fields = [4, 5, 6]
 
@@ -385,9 +460,9 @@ def setgeo(rundata):
     clawutil.data.get_remote_file(
           "http://www.columbia.edu/~ktm2132/bathy/gulf_caribbean.tt3.tar.bz2")
     # topo_path = os.path.join(scratch_dir, 'gulf_caribbean.tt3')
-    topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0,
+    topo_data.topofiles.append([3, 1, 6 ,rundata.clawdata.t0,
                                 rundata.clawdata.tfinal,
-                                'ike_test.tt3'])
+                                'ike_test1.tt3'])
 
     # == setfixedgrids.data values ==
     rundata.fixed_grid_data.fixedgrids = []

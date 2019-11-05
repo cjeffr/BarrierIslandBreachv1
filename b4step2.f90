@@ -36,8 +36,20 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
 
     ! Local storage
-    integer :: i,j
-    real(kind=8) :: x,y
+    integer :: i,j, status
+    real(kind=8) :: x,y, mu, sigma, lat0, lat1, lon0, lon1, time, breach_trigger
+    real(kind=8), dimension(3) :: time_array
+    
+    breach_trigger =
+    lat0 =
+    lat1 =
+    lon0 =
+    lon1 =
+    mu =
+!    time
+
+!    print *, breach_trigger, mu, lat0, lon0
+    time_array = (/-259200.d0,-237600.d0,-216000.d0 /)
 
     ! Check for NaNs in the solution
     call check4nans(meqn,mbc,mx,my,q,t,1)
@@ -57,19 +69,27 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
         aux(1,:,:) = NEEDS_TO_BE_SET ! new system checks this val before setting
         call setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     endif
-
+!    mu = -90.0
+    sigma = 1.0
     ! Breach
+    ! print *, t
+    if (ANY(time_array == t)) then
+    ! print *, "starting breach"
     do j=1-mbc,my+mbc
         y = ylower + (j-0.5d0) * dy
         do i=1-mbc,mx+mbc
             x = xlower + (i-0.5d0) * dx
-            if ((x > -88.0) .and. (x < -86.0) .and. &
-                (y > 25.0) .and. (y < 26.0)) then
-                
-                aux(1, i, j) = 0.1d0
+            if ((x > lon0) .and. (x < lon1) .and. &
+                (y > lat0) .and. (y < lat1)) then
+                if (aux(1,i,j) >= 0.0) then
+                        ! print *, 'Bathy value before: ', aux(1,i,j)
+                    aux(1, i, j) = aux(1,i,j) - (1.0 * exp(-0.5 * (x - mu)**2/sigma**2)) *(0.55 * aux(1,i,j))
+                end if
+                ! print *, 'Bathy value after:', aux(1, i, j)
             end if
         end do
     end do
+    end if
 
     ! Set wind and pressure aux variables for this grid
     call set_storm_fields(maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)
