@@ -25,6 +25,18 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     use amr_module, only: xperdom,yperdom,spheredom,NEEDS_TO_BE_SET
 
     use storm_module, only: set_storm_fields
+
+    use breach_module, only: mu
+    use breach_module, only: lat0
+    use breach_module, only: lat1
+    use breach_module, only: lon0
+    use breach_module, only: lon1
+    use breach_module, only: sigma
+    use breach_module, only: breach_trigger
+    use breach_module, only: time_ratio
+    use breach_module, only: start_time
+    use breach_module, only: end_time
+
     implicit none
 
     ! Subroutine arguments
@@ -33,23 +45,15 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     real(kind=8), intent(inout) :: xlower, ylower, dx, dy, t, dt
     real(kind=8), intent(inout) :: q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
     real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
+    real(kind=8), intent(in) :: mu, sigma, lat0, lat1, lon0, lon1, time, breach_trigger, time_ratio, start_time, end_time
 
 
     ! Local storage
     integer :: i,j, status
-    real(kind=8) :: x,y, mu, sigma, lat0, lat1, lon0, lon1, time, breach_trigger
+    real(kind=8) :: x,y
     real(kind=8), dimension(3) :: time_array
     
-    breach_trigger =
-    lat0 =
-    lat1 =
-    lon0 =
-    lon1 =
-    mu =
-!    time
-
-!    print *, breach_trigger, mu, lat0, lon0
-    time_array = (/-259200.d0,-237600.d0,-216000.d0 /)
+    call setprob()
 
     ! Check for NaNs in the solution
     call check4nans(meqn,mbc,mx,my,q,t,1)
@@ -69,12 +73,9 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
         aux(1,:,:) = NEEDS_TO_BE_SET ! new system checks this val before setting
         call setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     endif
-!    mu = -90.0
-    sigma = 1.0
+
     ! Breach
-    ! print *, t
-    if (ANY(time_array == t)) then
-    ! print *, "starting breach"
+    if ((start_time <= t) .and. (end_time >=t)) then
     do j=1-mbc,my+mbc
         y = ylower + (j-0.5d0) * dy
         do i=1-mbc,mx+mbc
@@ -82,10 +83,8 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
             if ((x > lon0) .and. (x < lon1) .and. &
                 (y > lat0) .and. (y < lat1)) then
                 if (aux(1,i,j) >= 0.0) then
-                        ! print *, 'Bathy value before: ', aux(1,i,j)
-                    aux(1, i, j) = aux(1,i,j) - (1.0 * exp(-0.5 * (x - mu)**2/sigma**2)) *(0.55 * aux(1,i,j))
+                    aux(1, i, j) = aux(1,i,j) - (sigma * exp(-0.5 * (x - mu)**2/sigma**2)) *(time_ratio * aux(1,i,j))
                 end if
-                ! print *, 'Bathy value after:', aux(1, i, j)
             end if
         end do
     end do
