@@ -2,3 +2,6 @@
 *.tt3
 *.txt
 *.png
+*.tar.gz
+*.idea*
+*.ipynb
