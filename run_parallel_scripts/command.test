@@ -1,0 +1,10 @@
+cd sim0_1/;make .plots
+cd sim1_1/;make .plots
+cd sim2_1/;make .plots
+cd sim3_1/;make .plots
+cd sim4_1/;make .plots
+cd sim5_1/;make .plots
+cd sim6_1/;make .plots
+cd sim7_1/;make .plots
+cd sim8_1/;make .plots
+cd sim9_1/;make .plots
