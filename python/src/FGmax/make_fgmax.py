@@ -15,10 +15,10 @@ dx_fine = .003125  # grid resolution at finest level
 
 fg = fgmax_tools.FGmaxGrid()
 fg.point_style = 2       # will specify a 2d grid of points
-fg.x1 = -95.0 - dx_fine/2.
-fg.x2 = -94.0 + dx_fine/2.
-fg.y1 = 29.5 - dx_fine/2.
-fg.y2 = 30.0 + dx_fine/2.
+fg.x1 = -72.66 - dx_fine/2.
+fg.x2 = -72.35 + dx_fine/2.
+fg.y1 = 40.76 - dx_fine/2.
+fg.y2 = 40.90 + dx_fine/2.
 fg.dx = dx_fine
 fg.tstart_max =  -70000.     # when to start monitoring max values
 fg.tend_max = 1.e10       # when to stop monitoring max values
@@ -27,6 +27,6 @@ fg.dt_check = 60.         # target time (sec) increment between updating
 fg.min_level_check = 5    # which levels to monitor max on
 fg.arrival_tol = 1.e-2    # tolerance for flagging arrival
 
-fg.input_file_name = 'breach_fgmax.txt'
+fg.input_file_name = 'moriches_fgmax.txt'
 fg.write_input_data()
 
