@@ -4,3 +4,6 @@
 *.png
 *.tar.gz
 *.idea*
+.vscode
+_output
+pyclaw.log
