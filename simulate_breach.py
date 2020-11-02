@@ -32,7 +32,8 @@ island = ( (Y < i0) * bathymetry +
              (Y >= i0) * (Y <= i1)*(np.ones(bathymetry.shape)*l1) +
              (Y > i1) * bathymetry)*(X <= -80) + (X > -80)*bathymetry
 plt.figure()
-plt.pcolor(X, Y, island,norm=colors.hillshade(vmin=-10, vmax=2))
+plt.pcolor(X, Y, island,norm=colors.Normalize(vmin=-10, vmax=2))
+
 
 
 plt.colorbar()
@@ -43,12 +44,12 @@ plt.show()
 for i in range(my):
     for j in range(mx):
         if island[i,j] == 2 and (island[i, j+1] < 0):
-            print(i,j,'land')
+            # print(i,j,'land')
             if (island[i+1, j+1] < 0) :
                 land_y = i
                 land_x = j + 1
                 while island[land_y, land_x] < 2:
-                    print(land_x, land_y)
+                    # print(land_x, land_y)
                     for k in range(-10, 10):  # this is dangerous, if we were at x < 62 it will crash
                         #     # for l in range(3):
                         island[land_y + 1, land_x + k] = 2
@@ -66,17 +67,38 @@ for i in range(my):
 
 stuff = np.where(island == 2)
 coords = list(zip(stuff[0], stuff[1]))
-plt.figure()
-plt.pcolor(X, Y, island,vmin=-10, vmax=2)
-
-
-plt.colorbar()
+# plt.figure()
+# # plt.pcolor(X, Y, island,vmin=-10, vmax=2)
+#
+#
+# plt.colorbar()
 
 
 # plt.ylim(27.0, 28.5)
 # plt.xlim(-80.2, -79.2)
 plt.show()
-#
+width = 3
+height = [3,2,1,0]
+breach = island.copy()
+breach_loc = (-90, 27)
+for i in range(4):
+    for xidx, j in enumerate(x):
+        for yidx, k in enumerate(y):
+            if (j <= -90.) and (j >= -91.0):
+                if (k >= 27) and (k <= 27.2):
+                    print(breach[yidx, xidx])
+                    # print('found something')
+                    # print(j)
+                    b = (j+90.5)**2 + i
+                    print(b)
+                    breach[yidx, xidx] = breach[yidx, xidx] - b
+                    print(breach[yidx, xidx])
+    # breach = breach -
+    plt.pcolor(X,Y,breach, norm=colors.Normalize(vmin=0, vmax=2))
+    plt.ylim(26, 28)
+    plt.savefig(f'/mnt/c/Projects/plots/{i}.png')
+    plt.show()
+
 # # loc = plticker.MultipleLocator(base=0.1) # this locator puts ticks at regular intervals
 # # plt.yaxis.set_major_locator(loc)
 # plt.show()
