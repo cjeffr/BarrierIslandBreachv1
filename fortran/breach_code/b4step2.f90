@@ -84,7 +84,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
                     if ((x > lon0) .and. (x < lon1) .and. &
                         (y > lat0) .and. (y < lat1)) then
                         if (aux(1,i,j) >= 0.0) then
-                            aux(1, i, j) = aux(1,i,j) - (sigma * exp(-0.5 * (x - mu)**2/sigma**2)) * &
+                            aux(1, i, j) = aux(1,i,j) - (x - mu)**2 + i * &
                                     (time_ratio * aux(1,i,j))
                         end if
                     end if
