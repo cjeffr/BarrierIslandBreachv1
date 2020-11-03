@@ -49,7 +49,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
 
     ! Local storage
-    integer :: i,j, status
+    integer :: i,j, status, k, depth
     real(kind=8) :: x,y
     real(kind=8), dimension(3) :: time_array
 
@@ -73,9 +73,9 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     endif
 
     call setprob()
-
-    ! Breach
-    if (breach_trigger == 1) then
+    depth = 5
+    ! Breachi
+        if (breach_trigger == 1) then
         if ((start_time <= t) .and. (end_time >=t)) then
             do j=1-mbc,my+mbc
                 y = ylower + (j-0.5d0) * dy
@@ -84,8 +84,10 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
                     if ((x > lon0) .and. (x < lon1) .and. &
                         (y > lat0) .and. (y < lat1)) then
                         if (aux(1,i,j) >= 0.0) then
-                            aux(1, i, j) = aux(1,i,j) - (x - mu)**2 + i * &
+                            do k=1,depth
+                            aux(1, i, j) = aux(1,i,j) - ((x - mu)**2 + k) * &
                                     (time_ratio * aux(1,i,j))
+                            end do
                         end if
                     end if
                 end do
