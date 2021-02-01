@@ -24,9 +24,13 @@ for stateno, state in enumerate(x.states):
     yc = Yc[0,:]
     h = state.q[0,:,:]
     eta = state.q[3,:,:]
+    wind_x = state.aux[4,:,:]
+    wind_y = state.aux[5,:,:]
+
     if (np.isnan(eta).any()) == True:
 
         print(np.isnan(eta).any())
+
     topo = eta - h
     # water = np.ma.masked_where(h <= drytol_default, eta)
     water = eta
