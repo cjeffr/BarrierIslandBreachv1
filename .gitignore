@@ -7,3 +7,5 @@
 .vscode
 _output
 pyclaw.log
+.DS_Store
+.ipynb_checkpoints*
