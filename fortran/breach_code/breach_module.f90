@@ -7,6 +7,8 @@ module breach_module
 
     ! Place data here
     real(kind=8) :: mu, sigma, lat0, lat1, lon0, lon1, start_time, end_time, time_ratio, breach_trigger, data
+    real, allocatable :: num_breaches(:)
+    integer :: num
 
 contains
 
@@ -30,7 +32,9 @@ contains
             else
                 open(unit, file = 'breach.data')
             endif
-
+	    read(unit, *) num
+	    allocate (num_breaches(num))
+	    print *, num
             ! Basic switch to turn on variable friction
             read(unit, *)
             read(unit, *) breach_trigger
