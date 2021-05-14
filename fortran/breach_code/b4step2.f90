@@ -26,16 +26,17 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
     use storm_module, only: set_storm_fields
 
-    use breach_module, only: mu
-    use breach_module, only: lat0
-    use breach_module, only: lat1
-    use breach_module, only: lon0
-    use breach_module, only: lon1
+    use breach_module, only: center
+    use breach_module, only: south
+    use breach_module, only: north
+    use breach_module, only: west
+    use breach_module, only: east
     use breach_module, only: sigma
     use breach_module, only: breach_trigger
     use breach_module, only: time_ratio
     use breach_module, only: start_time
     use breach_module, only: end_time
+    use breach_module, only: num_breaches
 
     implicit none
 
@@ -49,7 +50,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
 
     ! Local storage
-    integer :: i,j, status
+    integer :: i,j, num, status
     real(kind=8) :: x,y
     real(kind=8), dimension(3) :: time_array
 
@@ -75,23 +76,26 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     call setprob()
 
     ! Breach
-    if (breach_trigger == 1) then
-        if ((start_time <= t) .and. (end_time >=t)) then
-            do j=1-mbc,my+mbc
-                y = ylower + (j-0.5d0) * dy
-                do i=1-mbc,mx+mbc
-                    x = xlower + (i-0.5d0) * dx
-                    if ((x > lon0) .and. (x < lon1) .and. &
-                        (y > lat0) .and. (y < lat1)) then
-                        if (aux(1,i,j) >= 0.0) then
-                            aux(1, i, j) = aux(1,i,j) - (sigma * exp(-0.5 * (x - mu)**2/sigma**2)) * &
-                                    (time_ratio * aux(1,i,j))
+    do num=1,num_breaches
+        if (breach_trigger(num) == 1) then
+            if ((start_time <= t) .and. (end_time >=t)) then
+                do j=1-mbc,my+mbc
+                    y = ylower + (j-0.5d0) * dy
+                    do i=1-mbc,mx+mbc
+                        x = xlower + (i-0.5d0) * dx
+                        if ((x > west(num)) .and. (x < east(num)) .and. &
+                            (y > south(num)) .and. (y < north(num))) then
+                            if (aux(1,i,j) >= 0.0) then
+                                aux(1, i, j) = aux(1,i,j) -& 
+                                               (sigma * exp(-0.5 * (x - center(num))**2/sigma**2)) * &
+                                               (time_ratio )
+                            end if
                         end if
-                    end if
+                    end do
                 end do
-            end do
+            end if
         end if
-    end if
+    end do
 
     ! Set wind and pressure aux variables for this grid
     call set_storm_fields(maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)

@@ -6,9 +6,9 @@ module breach_module
     logical, private :: module_setup = .false.
 
     ! Place data here
-    real(kind=8) :: mu, sigma, lat0, lat1, lon0, lon1, start_time, end_time, time_ratio, breach_trigger, data
-    real, allocatable :: num_breaches(:)
-    integer :: num
+    real(kind=8) sigma, start_time, end_time, time_ratio, data
+    real, allocatable :: breach_trigger(:), center(:), south(:), north(:), west(:), east(:)
+    integer :: num_breaches, num
 
 contains
 
@@ -33,22 +33,22 @@ contains
                 open(unit, file = 'breach.data')
             endif
 	    read(unit, *) num
-	    allocate (num_breaches(num))
+            num_breaches = num
+	    allocate (breach_trigger(num), center(num), south(num), north(num), west(num), east(num))
 	    print *, num
             ! Basic switch to turn on variable friction
             read(unit, *)
             read(unit, *) breach_trigger
-            read(unit, *) lat0
-            read(unit, *) lat1
-            read(unit, *) lon0
-            read(unit, *) lon1
-            read(unit, *) mu
+            read(unit, *) south
+            read(unit, *) north
+            read(unit, *) west
+            read(unit, *) east
+            read(unit, *) center
             read(unit, *) sigma
             read(unit, *) time_ratio
             read(unit, *) start_time
             read(unit, *) end_time
             close(unit)
-            print *, mu, lat0
             module_setup = .true.
         end if
 
