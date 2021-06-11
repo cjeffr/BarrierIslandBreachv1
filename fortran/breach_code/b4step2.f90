@@ -78,7 +78,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     ! Breach
     do num=1,num_breaches
         if (breach_trigger(num) == 1) then
-            if ((start_time <= t) .and. (end_time >=t)) then
+            if ((start_time(num) <= t) .and. (end_time(num) >=t)) then
                 do j=1-mbc,my+mbc
                     y = ylower + (j-0.5d0) * dy
                     do i=1-mbc,mx+mbc
@@ -88,7 +88,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
                             if (aux(1,i,j) >= 0.0) then
                                 aux(1, i, j) = aux(1,i,j) -& 
                                                (sigma * exp(-0.5 * (x - center(num))**2/sigma**2)) * &
-                                               (time_ratio )
+                                               (time_ratio(num) )
                             end if
                         end if
                     end do

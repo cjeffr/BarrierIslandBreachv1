@@ -7,7 +7,7 @@ module breach_module
 
     ! Place data here
     real(kind=8) sigma, start_time, end_time, time_ratio, data
-    real, allocatable :: breach_trigger(:), center(:), south(:), north(:), west(:), east(:)
+    real, allocatable :: breach_trigger(:), center(:), south(:), north(:), west(:), east(:), start_time(:), end_time(:), time_ratio(:)
     integer :: num_breaches, num
 
 contains
@@ -34,7 +34,7 @@ contains
             endif
 	    read(unit, *) num
             num_breaches = num
-	    allocate (breach_trigger(num), center(num), south(num), north(num), west(num), east(num))
+	    allocate (breach_trigger(num), center(num), south(num), north(num), west(num), east(num), start_time(num), end_time(num), time_ratio(:))
 	    print *, num
             ! Basic switch to turn on variable friction
             read(unit, *)
